@@ -1,0 +1,108 @@
+import pygame
+
+# initialize Pygame
+pygame.init()
+
+# set up the screen
+screen_width = 800
+screen_height = 600
+screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.display.set_caption("Super Mario Bros.")
+
+# set up the clock
+clock = pygame.time.Clock()
+
+# define some colors
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
+GREEN = (0, 255, 0)
+
+# define some constants
+GRAVITY = 0.5
+JUMP_POWER = 10
+MOVE_SPEED = 5
+
+# load the player image
+player_image = pygame.Surface((32, 64))
+player_image.fill(BLUE)
+
+# define the player class
+class Player(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = player_image
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.vx = 0
+        self.vy = 0
+        self.on_ground = False
+
+    def update(self):
+        # apply gravity
+        self.vy += GRAVITY
+
+        # move horizontally
+        self.rect.x += self.vx
+
+        # check for collisions
+        block_hit_list = pygame.sprite.spritecollide(self, blocks_group, False)
+        for block in block_hit_list:
+            if self.vx > 0:
+                self.rect.right = block.rect.left
+            elif self.vx < 0:
+                self.rect.left = block.rect.right
+            self.vx = 0
+
+        # move vertically
+        self.rect.y += self.vy
+
+        # check for collisions
+        block_hit_list = pygame.sprite.spritecollide(self, blocks_group, False)
+        for block in block_hit_list:
+            if self.vy > 0:
+                self.rect.bottom = block.rect.top
+                self.on_ground = True
+            elif self.vy < 0:
+                self.rect.top = block.rect.bottom
+            self.vy = 0
+
+        # check if the player is on the ground
+        if self.on_ground:
+            if self.vx == 0:
+                self.image.fill(BLUE)
+            elif self.vx > 0:
+                self.image.fill(GREEN)
+            elif self.vx < 0:
+                self.image.fill(RED)
+        else:
+            self.image.fill(WHITE)
+
+    def jump(self):
+        if self.on_ground:
+            self.vy = -JUMP_POWER
+            self.on_ground = False
+
+    def move_left(self):
+        self.vx = -MOVE_SPEED
+
+    def move_right(self):
+        self.vx = MOVE_SPEED
+
+    def stop(self):
+        self.vx = 0
+
+# load the block image
+block_image = pygame.Surface((32, 32))
+block_image.fill(WHITE)
+
+# define the block class
+class Block(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = block_image
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
